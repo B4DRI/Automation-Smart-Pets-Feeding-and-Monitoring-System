@@ -1,0 +1,181 @@
+//Code for water pump & sensor
+//Servo not include yet
+
+//Include the library files
+#include <LiquidCrystal_I2C.h>
+#define BLYNK_PRINT Serial
+#define BLYNK_TEMPLATE_ID "TMPL6PGMh9hLY"
+#define BLYNK_TEMPLATE_NAME "water level monitoring level"
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+
+//Initialize the LCD display
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+
+//Wifi configuration
+char auth[] = "NqXOR_TdkhVvJzSK4N6WxLGmZNoKu6Se";//Enter your Auth token
+// char ssid[] = "DCS-KICT";//Enter your WIFI name
+// char pass[] = "9mwjcD5B";
+char ssid[] = "ROG Phone 6D_3592";//Enter your WIFI name
+char pass[] = "asamjawa214";//Enter your WIFI password
+
+
+BlynkTimer timer;
+
+
+// Define the component pins
+#define trig 13 //GPIO13 = D7
+#define echo 15 //GPIO15 = D8
+#define relay 12 //GPIO12 = D6
+
+
+//Define pin for buzzer & led
+#define buzzerPin 5 //GPIO5 = D1
+#define redLed 4 //GPIO4 = D2
+#define greenLed 0 //GPIO0 = D3
+#define yellowLed 2 //GPIO2 = D4
+// const int buzzerPin = D1;
+// const int redLed = D2;
+// const int greenLed = D3;
+// const int yellowLed =D4;
+
+
+//Enter your tank max value(CM)
+int MaxLevel = 20;
+
+
+int Level1 = (MaxLevel * 75) / 100; //15
+int Level2 = (MaxLevel * 55) / 100; //11
+int Level3 = (MaxLevel * 35) / 100; //7
+int Level4 = (MaxLevel * 15) / 100; //3
+//int Level5 = (MaxLevel * 5) / 100;
+
+
+void setup() {
+
+
+  //Declare pinMode
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+  pinMode(relay, OUTPUT);
+  pinMode(buzzerPin,OUTPUT);
+  pinMode(redLed,OUTPUT);
+  pinMode(greenLed,OUTPUT);
+  pinMode(yellowLed,OUTPUT);
+
+
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  lcd.backlight();
+ 
+ 
+  digitalWrite(relay, LOW);
+  Blynk.begin(auth, ssid, pass, "blynk.cloud", 80);
+
+
+  lcd.setCursor(0, 0);
+  lcd.print("Water level");
+  lcd.setCursor(4, 1);
+  lcd.print("Monitoring");
+  delay(4000);
+  lcd.clear();
+
+
+  //Call the functions
+  timer.setInterval(100L, ultrasonic);
+}
+
+
+//Get the ultrasonic sensor values
+void ultrasonic() {
+  digitalWrite(trig, LOW);
+  delayMicroseconds(4);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  long t = pulseIn(echo, HIGH);
+  int distance = t / 29 / 2;
+
+
+  int blynkDistance = (distance - MaxLevel) * -1;
+
+
+  if (distance <= MaxLevel) {
+    Blynk.virtualWrite(V0, blynkDistance);
+  }
+  else {
+    Blynk.virtualWrite(V0, 0);
+  }
+  lcd.setCursor(0, 0);
+  lcd.print("WLevel:");
+
+
+  if (Level1 <= distance) {
+    //tone(buzzerPin, 500);
+    digitalWrite(buzzerPin, HIGH); // Turn buzzer on
+    delay(1000); // Wait for a second
+    digitalWrite(buzzerPin, LOW); // Turn buzzer off
+    delay(1000);
+    digitalWrite(redLed, HIGH);
+    digitalWrite(greenLed, LOW);
+    digitalWrite(yellowLed, LOW);
+    // lcd.setCursor(8, 0);
+    // lcd.print("Very Low");
+   
+  } else if (Level2 <= distance && Level1 > distance) {
+   
+    digitalWrite(redLed, LOW);
+    digitalWrite(greenLed, LOW);
+    digitalWrite(yellowLed, HIGH);
+    // lcd.setCursor(8, 0);
+    // lcd.print("Low");
+    // lcd.print("      ");
+   
+  } else if (Level3 <= distance && Level2 > distance) {
+    digitalWrite(redLed, LOW);
+    digitalWrite(greenLed, LOW);
+    digitalWrite(yellowLed, LOW);
+    lcd.setCursor(8, 0);
+    lcd.print("Medium");
+    lcd.print("      ");
+   
+  } else if (Level4 <= distance && Level3 > distance) {
+    digitalWrite(redLed, LOW);
+    digitalWrite(greenLed, LOW);
+    digitalWrite(yellowLed, LOW);
+    lcd.setCursor(8, 0);
+    lcd.print("High");
+    lcd.print("      ");
+   
+ } //else if (Level4 >= distance) {
+  //   lcd.setCursor(8, 0);
+  //   lcd.print("Full");
+  //   lcd.print("      ");
+   
+  // }
+}
+
+
+//Get the button value
+BLYNK_WRITE(V1) {
+  bool Relay = param.asInt();
+  if (Relay == 1) {
+    digitalWrite(relay, HIGH);
+    lcd.setCursor(0, 1);
+    lcd.print("Motor is ON ");
+  } else {
+    digitalWrite(relay, LOW);
+    lcd.setCursor(0, 1);
+    lcd.print("Motor is OFF");
+  }
+}
+
+
+void loop() {
+  Blynk.run();//Run the Blynk library
+  timer.run();//Run the Blynk timer
+}
+
+
