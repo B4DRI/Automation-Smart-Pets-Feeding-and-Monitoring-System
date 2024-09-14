@@ -50,7 +50,6 @@ int Level1 = (MaxLevel * 75) / 100; //15
 int Level2 = (MaxLevel * 55) / 100; //11
 int Level3 = (MaxLevel * 35) / 100; //7
 int Level4 = (MaxLevel * 15) / 100; //3
-//int Level5 = (MaxLevel * 5) / 100;
 
 
 void setup() {
@@ -73,14 +72,6 @@ void setup() {
  
   digitalWrite(relay, LOW);
   Blynk.begin(auth, ssid, pass, "blynk.cloud", 80);
-
-
-  lcd.setCursor(0, 0);
-  lcd.print("Water level");
-  lcd.setCursor(4, 1);
-  lcd.print("Monitoring");
-  delay(4000);
-  lcd.clear();
 
 
   //Call the functions
@@ -108,8 +99,6 @@ void ultrasonic() {
   else {
     Blynk.virtualWrite(V0, 0);
   }
-  lcd.setCursor(0, 0);
-  lcd.print("WLevel:");
 
 
   if (Level1 <= distance) {
@@ -121,40 +110,25 @@ void ultrasonic() {
     digitalWrite(redLed, HIGH);
     digitalWrite(greenLed, LOW);
     digitalWrite(yellowLed, LOW);
-    // lcd.setCursor(8, 0);
-    // lcd.print("Very Low");
+
    
   } else if (Level2 <= distance && Level1 > distance) {
    
     digitalWrite(redLed, LOW);
     digitalWrite(greenLed, LOW);
     digitalWrite(yellowLed, HIGH);
-    // lcd.setCursor(8, 0);
-    // lcd.print("Low");
-    // lcd.print("      ");
    
   } else if (Level3 <= distance && Level2 > distance) {
     digitalWrite(redLed, LOW);
     digitalWrite(greenLed, LOW);
     digitalWrite(yellowLed, LOW);
-    lcd.setCursor(8, 0);
-    lcd.print("Medium");
-    lcd.print("      ");
    
   } else if (Level4 <= distance && Level3 > distance) {
     digitalWrite(redLed, LOW);
     digitalWrite(greenLed, LOW);
     digitalWrite(yellowLed, LOW);
-    lcd.setCursor(8, 0);
-    lcd.print("High");
-    lcd.print("      ");
-   
- } //else if (Level4 >= distance) {
-  //   lcd.setCursor(8, 0);
-  //   lcd.print("Full");
-  //   lcd.print("      ");
-   
-  // }
+ } 
+
 }
 
 
