@@ -1,2 +1,2 @@
-#Automation Smart Pets Feeding and Monitoring System (Development status: In Progress)
+# Automation Smart Pets Feeding and Monitoring System (Development status: In Progress)
 An IoT-based solution for automating pet feeding and monitoring through a mobile application. The system integrates an ESP8266 microcontroller, ultrasonic sensors, servo motors, and water pumps to dispense food and water for pets based on a preset schedule, with real-time monitoring capabilities. The mobile app allows users to remotely control and monitor food and water levels, ensuring pets receive optimal care even when owners are away. 
