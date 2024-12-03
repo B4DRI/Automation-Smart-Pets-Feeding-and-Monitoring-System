@@ -1,0 +1,170 @@
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+#include <Servo.h>
+
+//Wifi configuration
+char auth[] = "NqXOR_TdkhVvJzSK4N6WxLGmZNoKu6Se";
+// char ssid[] = "DCS-KICT";//Enter your WIFI name
+// char pass[] = "9mwjcD5B";
+char ssid[] = "mahazirramlee69@unifi";
+char pass[] = "mahazir2515";
+
+BlynkTimer timer;
+Servo servo;
+
+// Define the component pins
+#define trig 13 //GPIO13 = D7
+#define echo 15 //GPIO15 = D8
+
+#define trig2 2  // GPIO2 = D4
+#define echo2 14  // GPIO14 = D5 
+
+#define relay 12 //GPIO12 = D6
+#define buzzerPin 5 //GPIO5 = D1
+#define redLed 4 //GPIO4 = D2
+
+#define servopin 16
+
+//Enter your tank max value(CM)
+int MaxLevel = 20;
+int LowLevel = (MaxLevel * 75) / 100; //15
+
+int MaxLevel2 = 20;
+int LowLevel2 = (MaxLevel2 * 75) / 100; //15
+
+unsigned long previousMillis = 0;  
+unsigned long interval = 5 * 60000; 
+bool isManualControl = false;     
+
+
+void setup() {
+
+  // Start the serial communication
+  Serial.begin(9600);
+
+  // Connect to WiFi and Blynk
+  Blynk.begin(auth, ssid, pass);
+
+  // Attach the servo to the specified pin
+  servo.attach(servopin);
+  servo.write(0);  // Set servo to initial position (0 degrees)
+
+  //Declare pinMode
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+  pinMode(trig2, OUTPUT);
+  pinMode(echo2, INPUT);
+  pinMode(relay, OUTPUT);
+  pinMode(buzzerPin,OUTPUT);
+  pinMode(redLed,OUTPUT);
+ 
+  digitalWrite(relay, LOW);
+
+  //Call the functions
+  timer.setInterval(500L, ultrasonic);
+  timer.setInterval(1000L, ultrasonic2);
+}
+
+BLYNK_WRITE(V4) {
+  int switchState = param.asInt();  // Get switch state from the Blynk app
+  if (switchState == 1) {
+    isManualControl = true;  // Enable manual control
+    servo.write(180);  // Move the servo to 180 degrees
+  } else {
+    isManualControl = false; // Disable manual control
+    servo.write(0);  // Move the servo to 0 degrees
+  }
+}
+
+// Blynk function for setting timer duration with slider (V3)
+BLYNK_WRITE(V3) {
+  int sliderValue = param.asInt();  // Get slider value (in minutes) from Blynk app
+  interval = sliderValue * 60000;   // Convert minutes to milliseconds
+}
+
+//Get the ultrasonic sensor values
+void ultrasonic() {
+  digitalWrite(trig, LOW);
+  delayMicroseconds(4);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  long t = pulseIn(echo, HIGH);
+  int distance = t / 29 / 2;
+  int blynkDistance = (distance - MaxLevel) * -1;
+  int hysteresis = 7;
+
+
+  if (distance <= MaxLevel) {
+    Blynk.virtualWrite(V0, blynkDistance);
+  }
+  else {
+    Blynk.virtualWrite(V0, 0);
+  }
+
+
+  if (LowLevel <= distance && distance < MaxLevel - 4) {
+    //tone(buzzerPin, 500);
+    digitalWrite(buzzerPin, HIGH); // Turn buzzer on
+    delay(1000); // Wait for a second
+    digitalWrite(buzzerPin, LOW); // Turn buzzer off
+    delay(1000);
+    digitalWrite(redLed, HIGH);
+    digitalWrite(relay, HIGH);
+        delay(10000);
+    digitalWrite(relay, LOW);
+    digitalWrite(redLed, LOW);
+  }
+  // else if (distance >= MaxLevel - 4 + hysteresis){  //second option
+  //   digitalWrite(relay, LOW);
+  //   digitalWrite(redLed, LOW);
+
+  // }
+}
+
+void ultrasonic2() {
+  digitalWrite(trig2, LOW);
+  delayMicroseconds(4);
+  digitalWrite(trig2, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig2, LOW);
+  long t2 = pulseIn(echo2, HIGH);
+  int distance2 = t2 / 29 / 2;
+  int blynkDistance2 = (distance2 - MaxLevel2) * -1;
+
+  if (distance2 <= MaxLevel2) {
+    Blynk.virtualWrite(V2, blynkDistance2);  // Display distance for the second sensor
+  } else {
+    Blynk.virtualWrite(V2, 0);
+  }
+}
+
+//Get the button value
+BLYNK_WRITE(V1) {
+  bool Relay = param.asInt();
+  if (Relay == 1) {
+    digitalWrite(relay, HIGH);
+  } else {
+    digitalWrite(relay, LOW);
+  }
+}
+
+
+void loop() {
+  Blynk.run();//Run the Blynk library
+  timer.run();//Run the Blynk timer
+
+   if (!isManualControl) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      previousMillis = currentMillis;
+      
+      // Move the servo back and forth automatically
+      servo.write(180);  // Move to 180 degrees
+      delay(1000);       // Wait for 1 second
+      servo.write(0);    // Move back to 0 degrees
+    }
+  }
+}
+
+
