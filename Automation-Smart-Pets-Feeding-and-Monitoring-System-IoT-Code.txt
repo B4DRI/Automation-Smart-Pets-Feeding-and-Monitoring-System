@@ -4,8 +4,8 @@
 
 //Wifi configuration
 char auth[] = "NqXOR_TdkhVvJzSK4N6WxLGmZNoKu6Se";
-// char ssid[] = "DCS-KICT";//Enter your WIFI name
-// char pass[] = "9mwjcD5B";
+// char ssid[] = ;//Enter your WIFI name
+// char pass[] = ;
 char ssid[] = "mahazirramlee69@unifi";
 char pass[] = "mahazir2515";
 
@@ -166,5 +166,6 @@ void loop() {
     }
   }
 }
+
 
 
