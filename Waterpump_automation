@@ -16,8 +16,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 //Wifi configuration
 char auth[] = "NqXOR_TdkhVvJzSK4N6WxLGmZNoKu6Se";//Enter your Auth token
-// char ssid[] = "DCS-KICT";//Enter your WIFI name
-// char pass[] = "9mwjcD5B";
+// char ssid[] = ;//Enter your WIFI name
+// char pass[] = ;
 char ssid[] = "ROG Phone 6D_3592";//Enter your WIFI name
 char pass[] = "asamjawa214";//Enter your WIFI password
 
